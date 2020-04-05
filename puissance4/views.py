@@ -308,6 +308,8 @@ def play(request):
     if played is not None and not game.fini:
         _, colonne = played
         e = EmulatedGame(game)
+
+        ###get lock
         if e.is_move_possible(colonne) and game.turn == request.session['tourJoueur']:
             row = e.row(colonne)
             e.play(colonne)
@@ -319,6 +321,7 @@ def play(request):
             if e.fini:
                 print([str(tup) for tup in e.check_win((row, colonne))])
                 d['highlight'] = [str(tup) for tup in e.check_win((row, colonne))]
+        ### free lock 
     else:
         print("coup refusé")
         print(game.fini)
@@ -349,6 +352,7 @@ def computer_play(request):
         
     e = EmulatedGame(game)
     d = {}
+    ###get lock
     if game.turn != request.session['tourJoueur'] and  not game.fini:
         temps = 0
         while temps < 1:
@@ -369,6 +373,7 @@ def computer_play(request):
         if e.fini:
             print([str(tup) for tup in e.check_win((row, colonne))])
             d['highlight'] = [str(tup) for tup in e.check_win((row, colonne))]
+    ###free lock
     return json_state(request.session)
     
     
