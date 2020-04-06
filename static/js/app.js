@@ -36,7 +36,7 @@
 					}
 					if(data['tourJoueur']){
 						document.getElementById("current color").innerHTML= "Pour cette partie, vous jouez les pions <span class='font-weight-bold'>" + (data['tourJoueur'] ==  1? "jaunes" : "rouges") +"</span>"; 
-						if(data['tour_de_jeu'])
+						if(!fini && data['tour_de_jeu'])
 							if (data['tourJoueur'] != data['tour_de_jeu'])
 								waitForComputer();
 					}
@@ -62,8 +62,6 @@
 				dataType: 'json',
 				success: (function(data){updateGame(data);
 						console.log(data['played']);
-						if (data['played'] && false )
-							document.getElementById(data['played']).style.backgroundColor = "yellow";
 						if (data['highlight'] && false){
 							var i;
 							for(i = 0; i <data['highlight'].length ; i ++){
@@ -88,16 +86,7 @@
 					  'played': this.id 
 					},
 					dataType: 'json',
-					success: (function(data) {
-						updateGame(data);
-						
-						if (!fini){
-							waitForComputer();
-						}
-						else{
-							document.getElementById("message").innerHTML = "La partie est terminée";
-						}
-						})
+					success: updateGame
 					});	
 				}
 			});

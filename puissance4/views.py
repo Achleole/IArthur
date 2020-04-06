@@ -313,18 +313,14 @@ def play(request):
         if e.is_move_possible(colonne) and game.turn == request.session['tourJoueur']:
             row = e.row(colonne)
             e.play(colonne)
-            game.set(row, colonne, 1)
+            game.set(row, colonne, game.turn)
             game.fini = e.fini
             game.turn = 3- game.turn
             game.save()
-            
-            if e.fini:
-                print([str(tup) for tup in e.check_win((row, colonne))])
-                d['highlight'] = [str(tup) for tup in e.check_win((row, colonne))]
         ### free lock 
     else:
         print("coup refusé")
-        print(game.fini)
+    print(game.fini)
     return json_state(request.session)
     
 def computer_play(request):
@@ -365,14 +361,12 @@ def computer_play(request):
         print('temps :', temps, 'score: ', score, 'depth :', depth)
         row = e.row(colonne)
         e.play(colonne)
-        game.set(row, colonne, 2)
+        game.set(row, colonne, game.turn)
         game.turn = 3- game.turn
         game.fini = e.fini
         game.save()
-        d={'played' : str((row, colonne)), 'score': score}
         if e.fini:
             print([str(tup) for tup in e.check_win((row, colonne))])
-            d['highlight'] = [str(tup) for tup in e.check_win((row, colonne))]
     ###free lock
     return json_state(request.session)
     
