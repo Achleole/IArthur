@@ -251,3 +251,68 @@ cdef class Evaluation_simple(Evaluation):
             return -1
         else:
             return 0
+
+              
+def monte_carlo_tree_search(game, time_allocated): 
+    d = time()
+    current_time = 0
+    root = Node(game.copy())
+    cdef int iterations = 0
+    while current_time < time_allocated: 
+        leaf = traverse(root)  
+        simulation_result = rollout(leaf)
+        backpropagate(leaf, simulation_result)
+        iterations += 1
+        current_time = time() - d
+    cdef float best_score =-1
+    cdef float score
+    cdef int best = -1
+    for i in range(root.nb_children):
+        score = win_rate(root.children[i])
+        if score > best_score:
+            best_score = score
+            best = root.children[i].parent_move
+    return best
+  
+cdef Node traverse(node): 
+    while node.expended: 
+        if node.nb_children == 0:
+            return node
+        node = best_child(node)
+    node.expend()
+    if node.nb_children == 0:
+        return node
+    else:
+        return node.random_child()
+    
+# function for the result of the simulation 
+cdef int rollout(Node node):
+    cdef Game game = node.game.copy()
+    cdef int* coups_possibles
+    cdef int coup_choisi
+    while not game.fini: 
+        coups_possibles = possible_moves(game)
+        coup_choisi = coups_possibles[1 + np.random.randint(coups_possibles[0])]
+        game.play(coup_choisi)
+    return game.winner
+  
+# function for backpropagation 
+cdef backpropagate(Node node, int result): 
+    node.update_stats(result)  
+    if not node.parent:
+        return
+    backpropagate(node.parent, result) 
+
+# function for selecting the best child 
+# node with highest number of visits 
+cdef Node best_child(Node node): 
+    cdef Node best = node
+    cdef float best_score = -1
+    cdef float score
+    cdef int i = 0 
+    for i in range(node.nb_children):
+        score = eval_score(node.children[i])
+        if score > best_score:
+            best_score = score
+            best = node.children[i]
+    return best
