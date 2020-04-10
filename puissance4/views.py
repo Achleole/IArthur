@@ -16,6 +16,7 @@ from random import shuffle
 import torch.nn as nn
 import torch
 import pickle
+import game_handle as handle
 
 DEFAULT_IA = "simple"
 DEFAULT_TURN = "premier"
@@ -267,7 +268,7 @@ def getFuturTour(session):
         session['futurTour'] = DEFAULT_TURN
     return session['futurTour']
 
-def json_state(session):
+def json_state(session, message_sup = ''):
     initial = {}    
     
     game = getGame(session)
@@ -281,6 +282,7 @@ def json_state(session):
     wins = jeu.check_all_win()
     initial['highlight'] = [str(case) for case in wins[0]] + [str(case) for case in wins[1]]
     initial['message'] = decide_message(jeu, wins)
+    initial['message_sup'] = message_sup
     return JsonResponse(initial)  
 
 def index(request):
@@ -332,10 +334,7 @@ def computer_play(request):
     if not 'IA' in  request.session.keys():
         request.session['IA'] ='basique'
     depth = 1
-    if request.session['IA'] == "dnn":
-        evaluation = eval_fn
-        depth = 5
-    elif request.session['IA'] == "simple":
+    if request.session['IA'] == "simple":
         evaluation = evaluation_moyen
         depth = 6
     elif request.session['IA'] == "basique":
@@ -349,16 +348,23 @@ def computer_play(request):
     e = EmulatedGame(game)
     d = {}
     ###get lock
+    msg = ''
     if game.turn != request.session['tourJoueur'] and  not game.fini:
-        temps = 0
-        while temps < 1:
-            d = time()
-            colonne, score = min_max(e, evaluation, depth)
-            temps = time() - d
-            if is_random or depth > 20:
-                break
-            depth+=1
-        print('temps :', temps, 'score: ', score, 'depth :', depth)
+        
+        if request.session['IA'] == "dnn":
+            opti_game = handle.from_grid(e.grid.astype(int), e.turn())
+            colonne = handle.min_max(opti_game, handle.Evaluation_simple(), 6) #on lui donne une seconde
+            msg = '\n'.join([' '.join([str(i) for i in l]) for l in opti_game.grid])
+        else:
+            temps = 0
+            while temps < 1:
+                d = time()
+                colonne, score = min_max(e, evaluation, depth)
+                temps = time() - d
+                if is_random or depth > 20:
+                    break
+                depth+=1
+            print('temps :', temps, 'score: ', score, 'depth :', depth)
         row = e.row(colonne)
         e.play(colonne)
         game.set(row, colonne, game.turn)
@@ -368,7 +374,7 @@ def computer_play(request):
         if e.fini:
             print([str(tup) for tup in e.check_win((row, colonne))])
     ###free lock
-    return json_state(request.session)
+    return json_state(request.session, msg)
     
     
 def admin(request):

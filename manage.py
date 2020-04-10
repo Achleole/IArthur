@@ -3,6 +3,7 @@ import os
 import sys
 import torch.nn as nn
 import torch
+sys.path.insert(0, './puissance4/')
 
 class Net(nn.Module):
     def __init__(self, cuda = True):

@@ -40,7 +40,8 @@
 							if (data['tourJoueur'] != data['tour_de_jeu'])
 								waitForComputer();
 					}
-					
+					if (data['message_sup'])
+						console.log(data['message_sup'])
 				};
 	const reset = function () {
 				console.log("reset");
