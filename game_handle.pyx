@@ -232,8 +232,7 @@ cdef float eval_score(Node self):
     cdef float res = self.win / visits
     res += np.sqrt(2*np.log(self.parent.visited) / visits) #assert self.parent.visited >= 1, sinon c'est que l'algo marche pas comme prévu
     return res
-cdef float win_rate(Node self):
-    cdef int visits  
+def win_rate(self):
     if self.visited == 0:
         return 0
     else:
@@ -272,7 +271,7 @@ def monte_carlo_tree_search(game, time_allocated):
         if score > best_score:
             best_score = score
             best = root.children[i].parent_move
-    return best
+    return best 
   
 cdef Node traverse(node): 
     while node.expended: 

@@ -352,13 +352,11 @@ def computer_play(request):
     if game.turn != request.session['tourJoueur'] and  not game.fini:
         
         if request.session['IA'] == "dnn":
-            monte_carlo = False
-            opti_game = handle.from_grid(e.grid.astype(int), e.turn())
-            if monte_carlo:
-                colonne = handle.monte_carlo_tree_search(opti_game, 1)#on lui donne une seconde
-            else:
-                colonne = handle.min_max(opti_game, handle.Evaluation_simple(), 7) 
-            msg = '\n'.join([' '.join([str(i) for i in l]) for l in opti_game.grid])
+            opti_game = handle.from_grid(e.grid.copy().astype(int), e.turn())
+            colonne = handle.monte_carlo_tree_search(opti_game, 1)#on lui donne une seconde
+        elif request.session['IA'] == "simple":
+            opti_game = handle.from_grid(e.grid.copy().astype(int), e.turn())
+            colonne = handle.min_max(opti_game, handle.Evaluation_simple(), 7) 
         else:
             temps = 0
             while temps < 1:
