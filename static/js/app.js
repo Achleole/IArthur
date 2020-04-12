@@ -23,13 +23,22 @@
 					}
 					for(let i = 0; i < IAs.length; i++)
 						document.getElementById(IAs[i]).disabled = false;
-					if(data['IA'])
+					if(data['IA']){
 						document.getElementById(data['IA']).disabled= true;
+						console.log(data['IA'] != "dnn")
+						for( i = 0; i < time_setters.length; i++)
+							document.getElementById(time_setters[i]).disabled = (data['IA'] != "dnn");
+						if (data['computerTime']){
+							document.getElementById(data['computerTime']).disabled = true;
+							console.log(data['computerTime'])
+						}
+					}
 					if(data['message'])
 						document.getElementById("message").innerHTML = data['message'];
 						
 					for( i = 0; i < OrdreJeu.length; i++)
-						document.getElementById(OrdreJeu[i]).disabled = false;
+						document.getElementById(OrdreJeu[i]).disabled = (false);
+
 					if(data['futurTour']){
 						document.getElementById(data['futurTour']).disabled= true;
 						document.getElementById('futurTour').innerHTML= "A la prochaine partie vous jouerais en <span class='font-weight-bold'>" + data['futurTour'] +"</span>"; 
@@ -112,12 +121,7 @@
 		  'IA': this.id 
 		},
 		dataType: 'json',
-		success: (function(data) {
-			for( i = 0; i < IAs.length; i++)
-				document.getElementById(IAs[i]).disabled = false;
-			if(data['IA'])
-				document.getElementById(data['IA']).disabled= true;
-		})
+		success: updateGame
 	})};
 	const chooseTurn = function(){
 		console.log( this.id );
@@ -127,14 +131,17 @@
 		  'tour': this.id 
 		},
 		dataType: 'json',
-		success: (function(data) {
-			for( i = 0; i < OrdreJeu.length; i++)
-				document.getElementById(OrdreJeu[i]).disabled = false;
-			if(data['futurTour']){
-				document.getElementById(data['futurTour']).disabled= true;
-				document.getElementById('futurTour').innerHTML= "A la prochaine partie vous jouerais en <span class='font-weight-bold'>" + data['futurTour'] +"</span>"; 
-			}
-		})
+		success: updateGame
+	})};
+	const chooseTime = function(){
+		console.log( this.id );
+		$.ajax({
+		url: 'puissance4/ajax/setTime/',
+		data: {
+		  'time': this.id 
+		},
+		dataType: 'json',
+		success: updateGame
 	})};
 
 	// *** Initializations ***
@@ -157,6 +164,10 @@
 	for(let i = 0; i < OrdreJeu.length; i++)
 		document.getElementById(OrdreJeu[i]).onclick= chooseTurn;
 	
+		// Globals
+	var time_setters =["0.5", "1", "2", "5"]
 	// Display initial IA setting
+	for(let i = 0; i < time_setters.length; i++)
+		document.getElementById(time_setters[i]).onclick= chooseTime;
 	chooseIA();
 	refresh();

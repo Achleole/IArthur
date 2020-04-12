@@ -20,6 +20,8 @@ import game_handle as handle
 
 DEFAULT_IA = "simple"
 DEFAULT_TURN = "premier"
+DEFAULT_TIME = 1
+ACCEPTED_TIMES =["0.5","1","2","5"]
 
 
 class EmulatedGame:
@@ -263,6 +265,11 @@ def getIA(session):
         session['IA'] = DEFAULT_IA
     return session['IA']
 
+def getTime(session):
+    if not 'computerTime' in session.keys():
+        session['computerTime'] = DEFAULT_TIME
+    return session['computerTime']
+
 def getFuturTour(session):
     if not 'futurTour' in session.keys():
         session['futurTour'] = DEFAULT_TURN
@@ -283,6 +290,8 @@ def json_state(session, message_sup = ''):
     initial['highlight'] = [str(case) for case in wins[0]] + [str(case) for case in wins[1]]
     initial['message'] = decide_message(jeu, wins)
     initial['message_sup'] = message_sup
+    initial['computerTime'] = str(getTime(session))
+    
     return JsonResponse(initial)  
 
 def index(request):
@@ -331,13 +340,12 @@ def computer_play(request):
     except (KeyError, Game.DoesNotExist):
         game = Game.objects.create()
     is_random = False
-    if not 'IA' in  request.session.keys():
-        request.session['IA'] ='basique'
+    IA = getIA(request.session)
     depth = 1
-    if request.session['IA'] == "simple":
+    if IA == "simple":
         evaluation = evaluation_moyen
         depth = 6
-    elif request.session['IA'] == "basique":
+    elif IA == "basique":
         evaluation = evaluation_simple
         depth = 6
     else:
@@ -350,11 +358,10 @@ def computer_play(request):
     ###get lock
     msg = ''
     if game.turn != request.session['tourJoueur'] and  not game.fini:
-        
-        if request.session['IA'] == "dnn":
+        if IA == "dnn":
             opti_game = handle.from_grid(e.grid.copy().astype(int), e.turn())
-            colonne = handle.monte_carlo_tree_search(opti_game, 1)#on lui donne une seconde
-        elif request.session['IA'] == "simple":
+            colonne = handle.monte_carlo_tree_search(opti_game, getTime(request.session))#on lui donne une seconde
+        elif IA == "basique":
             opti_game = handle.from_grid(e.grid.copy().astype(int), e.turn())
             colonne = handle.min_max(opti_game, handle.Evaluation_simple(), 7) 
         else:
@@ -397,8 +404,14 @@ def spectate(request):
     
 def chooseIA(request):
     request.session['IA'] = request.GET.get('IA', "dnn")
-    return JsonResponse({'IA' : request.session['IA']})
+    return json_state(request.session)  
 
 def setTour(request):
     request.session['futurTour'] = request.GET.get('tour', "premier")
-    return JsonResponse({'futurTour' : request.session['futurTour']})  
+    return json_state(request.session)  
+
+def setTime(request):
+    time_desired = request.GET.get('time', "1")
+    if time_desired in ACCEPTED_TIMES:
+        request.session['computerTime'] = int(time_desired)
+    return json_state(request.session)  
